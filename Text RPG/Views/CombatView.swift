@@ -3,11 +3,12 @@ import SwiftUI
 
 struct CombatView: View {
     @ObservedObject var viewModel: GameViewModel
-    
     var body: some View {
         VStack {
             HealthBar(value: Double(viewModel.player.health), maxValue: 10.0)
-            HealthBar(value: Double(viewModel.dragon.health), maxValue: 30.0)
+            HealthBar(value: Double(viewModel.currentEnemy?.health ?? 0), maxValue: 30.0) // Adjust maxValue as needed
+            
+
             
             if let playerClass = viewModel.selectedClass {
                 if playerClass == .druid && viewModel.player.form == .tiger {
@@ -24,7 +25,7 @@ struct CombatView: View {
                 .padding()
             
             Text("Player Health: \(viewModel.player.health)")
-            Text("Dragon Health: \(viewModel.dragon.health)")
+            Text("\(viewModel.currentEnemy?.name ?? "Enemy") Health: \(viewModel.currentEnemy?.health ?? 0)")
             
             if viewModel.isPlayerTurn {
                 Text("Player's Turn - \(viewModel.timerValue)s")
@@ -41,7 +42,7 @@ struct CombatView: View {
                 
                 if viewModel.selectedClass == .druid {
                     Button(action: {
-                        viewModel.toggleWildShapeMenu()
+                        viewModel.toggleshapeShiftMenu()
                     }) {
                         Text("Wild Shape")
                     }
@@ -49,13 +50,13 @@ struct CombatView: View {
             } else {
                 Text("Dragon's Turn")
             }
-            if let dragonSpellMessage = viewModel.dragonSpellMessage {
-                Text(dragonSpellMessage)
+            if let EnemySpellMessage = viewModel.EnemySpellMessage {
+                Text(EnemySpellMessage)
                     .padding()
                     .onAppear {
                        
                         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                            viewModel.dragonSpellMessage = nil
+                            viewModel.EnemySpellMessage = nil
                         }
                     }
             }
@@ -71,10 +72,13 @@ struct CombatView: View {
         }.onChange(of: viewModel.player.health) { _ in
             viewModel.checkPlayerHealth()
         }
-        .sheet(isPresented: $viewModel.isWildShapeMenuVisible) {
-            WildShapeSheet(viewModel: viewModel)
+        .sheet(isPresented: $viewModel.isShapeshiftMenuVisible) {
+            ShapeShiftMenu(viewModel: viewModel)
                 .presentationDetents ([.height (200),.medium, .medium])
                 .presentationDragIndicator(.automatic)
         }
     }
+    
+    
+    
 }

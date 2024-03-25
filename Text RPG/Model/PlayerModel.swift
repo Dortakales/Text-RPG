@@ -1,5 +1,26 @@
 import SwiftUI
 
+enum PlayerClass: String {
+    case druid = "Druid"
+    case paladin = "Paladin"
+    case rogue = "Rogue"
+    case mage = "Mage"
+    
+  
+}
+
+struct Spell: Hashable {
+    let name: String
+    let damage: Int?
+    let manaCost: Int?
+    let staminaCost: Int?
+    
+}
+
+enum PlayerForm {
+    case normal
+    case tiger
+}
 
 struct Player {
     var health: Int = 1000
@@ -11,6 +32,9 @@ struct Player {
     var form: PlayerForm = .normal
     var experience: Int = 0
     
+
+    
+
     
     mutating func updateSpellbookForForm() {
            switch form {
@@ -35,44 +59,8 @@ struct Player {
     
 }
 
-enum PlayerClass: String {
-    case druid = "Druid"
-    case paladin = "Paladin"
-    case rogue = "Rogue"
-    case mage = "Mage"
-    
+
+
+
+
   
-}
-
-
-struct Spell: Hashable {
-    let name: String
-    let damage: Int?
-    let manaCost: Int?
-    let staminaCost: Int?
-    
-}
-  
-enum PlayerForm {
-    case normal
-    case tiger
-}
-
-
-enum GameState {
-    case choosingClass
-    case onBridge
-    case encounterDragon
-    case inCombat
-    case gameOver
-    case isDragonDefeated
-
-}
-
-struct EnemySpell: Hashable {
-    let name: String
-    let damage: Int?
-    let manaCost: Int?
-    let staminaCost: Int?
-    
-}

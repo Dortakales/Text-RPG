@@ -3,11 +3,12 @@ import SwiftUI
 
 @main
 struct TextRpgApp: App {
-    var viewModel = GameViewModel()
+    @StateObject var gameViewModel = GameViewModel()
+
 
     var body: some Scene {
         WindowGroup {
-            ContentView(viewModel: viewModel)
+            ContentView()
         }
     }
 }

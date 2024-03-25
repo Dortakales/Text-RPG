@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ChooseClassView: View {
     @ObservedObject var viewModel: GameViewModel
-    @State private var isWildShapeMenuVisible = false
     
     var body: some View {
         VStack {

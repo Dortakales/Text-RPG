@@ -1,103 +1,16 @@
 import SwiftUI
-import Combine
-
 
 class GameViewModel: ObservableObject {
     @Published var gameState: GameState = .choosingClass
     @Published var selectedClass: PlayerClass?
     @Published var player = Player()
-    @Published var dragon = Dragon()
-    @Published var isWildShapeMenuVisible = false
+    @Published var isShapeshiftMenuVisible = false
     @Published var isPlayerTurn: Bool = true
     @Published var timerValue: Int = 15
-    @Published var dragonSpellMessage: String?
-    
-    
-    
-    var timer: Timer?
-    
-    func startCombat() {
-        
-        isPlayerTurn = true
-        timerValue = 15
-        player.health = 100
-        player.mana = 1000
-        dragon.health = 30
-        
-        startTimer()
-    }
-    
-    func startPlayerTurn() {
-        isPlayerTurn = true
-        timerValue = 15
-        startTimer()
-        
-    }
-    func startDragonTurn() {
-        isPlayerTurn = false
-        dragonTurn()
-    }
-    
-    
-    private func startTimer() {
-        timer?.invalidate()
-        
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-            guard self.timerValue > 0 else {
-                self.endPlayerTurn()
-                return
-            }
-            self.timerValue -= 1
-        }
-    }
+    @Published var EnemySpellMessage: String?
+    @Published var currentEnemy: Enemy?
+    @Published var dragon = Dragon()
 
-    
-    private func endPlayerTurn() {
-        isPlayerTurn = false
-        startDragonTurn()
-    }
-    func dragonTurn() {
-       
-        let probabilities: [AttackSpell: Double] = [
-            dragon.attackspellbook[0]: 0.4,
-            dragon.attackspellbook[1]: 0.6
-        ]
-        
-        let randomSpell = dragonWeightedRandom(probabilities: probabilities)
-        
-        if let damage = randomSpell.damage {
-            player.takeDamage(amount: damage)
-        }
-        
-        dragonSpellMessage = "Dragon used \(randomSpell.name)"
-        startPlayerTurn()
-        
-        if dragon.health <= 0 {
-            gameState = .isDragonDefeated
-               }
-        
-        
-    }
-
-    
-    func dragonWeightedRandom<T>(probabilities: [T: Double]) -> T {
-        let totalWeight = probabilities.values.reduce(0, +)
-        let randomNumber = Double.random(in: 0..<totalWeight)
-        var cumulativeWeight = 0.0
-        
-        for (element, weight) in probabilities {
-            cumulativeWeight += weight
-            if randomNumber < cumulativeWeight {
-                return element
-            }
-        }
-        
-        fatalError("Invalid probabilities")
-    }
-    
-    
-    
-    
     
     func chooseClass(_ playerClass: PlayerClass) {
         selectedClass = playerClass
@@ -105,6 +18,64 @@ class GameViewModel: ObservableObject {
         gameState = .onBridge
         player.level = 1
     }
+    var timer: Timer?
+
+    func startCombat() {
+        isPlayerTurn = true
+        timerValue = 15
+        player.health = 100
+        player.mana = 1000
+
+        
+        currentEnemy = Dragon()
+
+        startTimer()
+    }
+              
+    func startPlayerTurn() {
+        DispatchQueue.main.async {
+            self.isPlayerTurn = true
+            self.timerValue = 15
+            self.startTimer()
+        }
+    }
+
+    func startEnemyTurn() {
+        isPlayerTurn = false
+        if let enemy = currentEnemy {
+            EnemySpellMessage = enemy.takeTurn(against: &player)
+            checkEnemyHealth()
+            
+            if gameState != .gameOver && gameState != .isDragonDefeated {
+                startPlayerTurn()
+            }
+        }
+    }
+    private func checkEnemyHealth() {
+        if let enemy = currentEnemy, enemy.health <= 0 {
+            gameState = .isDragonDefeated
+        }
+    }
+
+    private func startTimer() {
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in
+            guard let self = self else { return }
+            if self.timerValue > 0 {
+                self.timerValue -= 1
+            } else {
+                timer.invalidate()
+                self.endPlayerTurn()
+            }
+        }
+    }
+
+    private func endPlayerTurn() {
+        isPlayerTurn = false
+        startEnemyTurn()
+    }
+
+    
     
     private func setupPlayer() {
         switch selectedClass {
@@ -143,46 +114,38 @@ class GameViewModel: ObservableObject {
     }
     
     func castSpell(_ spell: Spell) {
-        
         guard isPlayerTurn else {
-            print("It's not the player's turn.")
             return
         }
         
         if let manaCost = spell.manaCost {
             guard player.mana >= manaCost else {
-                print("Not enough mana to cast \(spell.name).")
                 return
             }
             player.mana -= manaCost
         } else if let staminaCost = spell.staminaCost {
             guard player.stamina >= staminaCost else {
-                print("Not enough stamina to cast \(spell.name).")
                 return
             }
             player.stamina -= staminaCost
         } else {
-            print("Spell \(spell.name) does not have a mana cost or stamina cost.")
             return
         }
         
-        if let damage = spell.damage {
-            dragon.health -= damage
-        } else {
-            print("Spell \(spell.name) does not have damage.")
+        if let damage = spell.damage, var enemy = currentEnemy {
+                enemy.applyDamage(damage)
+                self.currentEnemy = enemy 
+            } else {
+            }
+
+            startEnemyTurn()
         }
-        
-        print("\(spell.name) casted successfully.")
-        
-        
-        startDragonTurn()
-    }
     
     
     
-    func toggleWildShapeMenu() {
-        isWildShapeMenuVisible.toggle()
-        print("Wild Shape menu visibility toggled: \(isWildShapeMenuVisible)")
+    func toggleshapeShiftMenu() {
+        isShapeshiftMenuVisible.toggle()
+       
         
     }
     

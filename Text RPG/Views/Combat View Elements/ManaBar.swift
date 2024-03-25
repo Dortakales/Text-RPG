@@ -11,7 +11,6 @@ struct ManaBar: View {
     init(value: Double, maxValue: Double) {
         self.value = value
         self.maxValue = maxValue
-        print("ManaBar - Initial Value: \(value)")
     }
     
     var body: some View {

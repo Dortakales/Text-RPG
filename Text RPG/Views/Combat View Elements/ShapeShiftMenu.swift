@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct WildShapeSheet: View {
+struct ShapeShiftMenu: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
